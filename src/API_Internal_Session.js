@@ -154,7 +154,7 @@ API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query,
 		}
 	}
 	catch (ex) {
-		if (returnPromise) { return $.Deferred().reject(ex); } else { throw ex; }
+		if (returnPromise) { return jq.Deferred().reject(ex); } else { throw ex; }
 	}
 };
 
@@ -442,7 +442,7 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 	var self = this;
 
 	// A. Create deferred object
-	var dfd = $.Deferred();
+	var dfd = jq.Deferred();
 
 	// B. Handle if multiple functions are being called
 	if (Array.isArray(payload)) {

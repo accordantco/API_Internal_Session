@@ -6,7 +6,7 @@ var READY_STATE_COMPLETE = 4;
 /**
  * Constructor
  */
-function API_Session(ajaxURL, senderid, senderpwd, controlid, uniqueid, dtdversion) {
+function API_Internal_Session(ajaxURL, senderid, senderpwd, controlid, uniqueid, dtdversion) {
 	this.ajaxURL = ajaxURL;
 	this.senderid = senderid || 'null';
 	this.senderpwd = senderpwd || 'null';
@@ -26,7 +26,7 @@ function API_Session(ajaxURL, senderid, senderpwd, controlid, uniqueid, dtdversi
 /**
  * Set login credentials
  */
-API_Session.prototype.ip_setCredentials = function(companyid, userid, password, clientid, locationid) {
+API_Internal_Session.prototype.ip_setCredentials = function(companyid, userid, password, clientid, locationid) {
 	this.companyid = companyid;
 	this.userid = userid;
 	this.password = password;
@@ -41,7 +41,7 @@ API_Session.prototype.ip_setCredentials = function(companyid, userid, password, 
 /**
  * Set session ID. Once set, it will be used for all authentications.
  */
-API_Session.prototype.ip_setSessionID = function(sessionid) {
+API_Internal_Session.prototype.ip_setSessionID = function(sessionid) {
 	this.sessionid = sessionid;
     this.ajaxURL = '../xml/ajaxgw.phtml?.sess=' + sessionid;
 }
@@ -49,21 +49,21 @@ API_Session.prototype.ip_setSessionID = function(sessionid) {
 /**
  * Get last XML request. Can be used for debugging.
  */
-API_Session.prototype.ip_getLastRequest = function() {
+API_Internal_Session.prototype.ip_getLastRequest = function() {
 	return this.lastRequest;
 }
 
 /**
  * Get last XML response. Can be used for debugging.
  */
-/*API_Session.prototype.ip_getLastResponse = function() {
+/*API_Internal_Session.prototype.ip_getLastResponse = function() {
 	return this.lastResponse;
 }*/
 
 /**
  * Set function to process API errors. By default alert(errorMessage) will be used.
  */
-API_Session.prototype.ip_setErrorProc = function(errorProc) {
+API_Internal_Session.prototype.ip_setErrorProc = function(errorProc) {
 	this.errorProc = errorProc;
 }
 
@@ -75,7 +75,7 @@ API_Session.prototype.ip_setErrorProc = function(errorProc) {
 /**
  * read API
  */
-API_Session.prototype.ip_read = function(object, fields, keys, returnFormat, docparid, callback) {
+API_Internal_Session.prototype.ip_read = function(object, fields, keys, returnFormat, docparid, callback) {
 
 	var payload = 
 	'<read>'+
@@ -92,7 +92,7 @@ API_Session.prototype.ip_read = function(object, fields, keys, returnFormat, doc
 /**
  * readByName API
  */
-API_Session.prototype.ip_readByName = function(object, fields, keys, returnFormat, callback) {
+API_Internal_Session.prototype.ip_readByName = function(object, fields, keys, returnFormat, callback) {
 
 	var payload = 
 	'<readByName>'+
@@ -108,7 +108,7 @@ API_Session.prototype.ip_readByName = function(object, fields, keys, returnForma
 /**
  * readByQuery API
  */
-API_Session.prototype.ip_readByQuery = function(object, fields, query, pagesize, returnFormat, callback) {
+API_Internal_Session.prototype.ip_readByQuery = function(object, fields, query, pagesize, returnFormat, callback) {
 
 	var payload = 
 	'<readByQuery>'+
@@ -125,7 +125,7 @@ API_Session.prototype.ip_readByQuery = function(object, fields, query, pagesize,
 /**
  * readView API
  */
-API_Session.prototype.ip_readView = function(view, filters, pagesize, returnFormat, callback) {
+API_Internal_Session.prototype.ip_readView = function(view, filters, pagesize, returnFormat, callback) {
 
     var payload =
         '<readView>'+
@@ -142,7 +142,7 @@ API_Session.prototype.ip_readView = function(view, filters, pagesize, returnForm
 /**
  * readMore API
  */
-API_Session.prototype.ip_readMore = function(object, callback, type) {
+API_Internal_Session.prototype.ip_readMore = function(object, callback, type) {
 
 	var payload =
 	'<readMore>'+
@@ -155,7 +155,7 @@ API_Session.prototype.ip_readMore = function(object, callback, type) {
 /**
  * readMoreObject API
  */
-API_Session.prototype.ip_readMoreObject = function(object, callback)
+API_Internal_Session.prototype.ip_readMoreObject = function(object, callback)
 {
     this.ip_readMore(object, callback, 'object');
 }
@@ -163,7 +163,7 @@ API_Session.prototype.ip_readMoreObject = function(object, callback)
 /**
  * readMoreView API
  */
-API_Session.prototype.ip_readMoreView = function(view, callback)
+API_Internal_Session.prototype.ip_readMoreView = function(view, callback)
 {
     this.ip_readMore(view, callback, 'view');
 }
@@ -171,7 +171,7 @@ API_Session.prototype.ip_readMoreView = function(view, callback)
 /**
  * readRelated API
  */
-API_Session.prototype.ip_readRelated = function(object, keys, relation, fields, returnFormat, callback) {
+API_Internal_Session.prototype.ip_readRelated = function(object, keys, relation, fields, returnFormat, callback) {
 
 	var payload = 
 	'<readRelated>'+
@@ -189,7 +189,7 @@ API_Session.prototype.ip_readRelated = function(object, keys, relation, fields, 
 /**
  * create API (uses object name and array of parameters)
  */
-API_Session.prototype.ip_create = function(object, fieldsArray, callback) {
+API_Internal_Session.prototype.ip_create = function(object, fieldsArray, callback) {
 
 	var payload = '<create><'+object+'>';
 	payload += this.processFields(fieldsArray);
@@ -201,7 +201,7 @@ API_Session.prototype.ip_create = function(object, fieldsArray, callback) {
 /**
  * create API (uses XML payload)
  */
-API_Session.prototype.ip_createXML = function(xmlPayload, callback) {
+API_Internal_Session.prototype.ip_createXML = function(xmlPayload, callback) {
 
 	var payload = 
 	'<create>'+xmlPayload+'</create>';
@@ -213,7 +213,7 @@ API_Session.prototype.ip_createXML = function(xmlPayload, callback) {
 /**
  * update API (uses object name and array of parameters)
  */
-API_Session.prototype.ip_update = function(object, fieldsArray, callback) {
+API_Internal_Session.prototype.ip_update = function(object, fieldsArray, callback) {
 
 	var payload = '<update><'+object+'>';
 	payload += this.processFields(fieldsArray);
@@ -226,7 +226,7 @@ API_Session.prototype.ip_update = function(object, fieldsArray, callback) {
 /**
  * update API (uses XML payload)
  */
-API_Session.prototype.ip_updateXML = function(xmlPayload, callback) {
+API_Internal_Session.prototype.ip_updateXML = function(xmlPayload, callback) {
 
 	var payload = 
 	'<update>'+xmlPayload+'</update>';
@@ -238,7 +238,7 @@ API_Session.prototype.ip_updateXML = function(xmlPayload, callback) {
 /**
  * delete API
  */
-API_Session.prototype.ip_delete = function(object, keys, callback) {
+API_Internal_Session.prototype.ip_delete = function(object, keys, callback) {
 
 	var payload = 
 	'<delete>'+
@@ -253,7 +253,7 @@ API_Session.prototype.ip_delete = function(object, keys, callback) {
 /**
  * inspect API
  */
-API_Session.prototype.ip_inspect = function(object, detail, callback) {
+API_Internal_Session.prototype.ip_inspect = function(object, detail, callback) {
 
 	var payload = 
 	(detail ? '<inspect detail="1">' : '<inspect>')+
@@ -271,7 +271,7 @@ API_Session.prototype.ip_inspect = function(object, detail, callback) {
 /**
  * Create XMLHttpRequest instance
  */
-API_Session.prototype.getXMLHTTPRequest = function() {
+API_Internal_Session.prototype.getXMLHTTPRequest = function() {
 	var xreq = false;
 	if (window.XMLHttpRequest) {
 		xreq = new XMLHttpRequest();
@@ -293,7 +293,7 @@ API_Session.prototype.getXMLHTTPRequest = function() {
 /**
  * XML encode string
  */
-API_Session.prototype.xmlEncode = function(str) {
+API_Internal_Session.prototype.xmlEncode = function(str) {
 	if (!str)
 		return '';
 	str = String(str);
@@ -303,7 +303,7 @@ API_Session.prototype.xmlEncode = function(str) {
 /**
  * XML node as string
  */
-API_Session.prototype.xmlNode = function(name, value) {
+API_Internal_Session.prototype.xmlNode = function(name, value) {
 	if (!name)
 		return '';
 	return '<'+name+'>'+this.xmlEncode(value)+'</'+name+'>';
@@ -312,7 +312,7 @@ API_Session.prototype.xmlNode = function(name, value) {
 /**
  * Get header of XML request
  */
-API_Session.prototype.getRecHeader = function() {
+API_Internal_Session.prototype.getRecHeader = function() {
 	var buff = '<?xml version="1.0" encoding="UTF-8"?><request>';
 	
 	buff += '<control><senderid>'+this.xmlEncode(this.senderid)+
@@ -346,7 +346,7 @@ API_Session.prototype.getRecHeader = function() {
 /**
  * Get footer of XML request
  */
-API_Session.prototype.getRecFooter = function() {
+API_Internal_Session.prototype.getRecFooter = function() {
 	var buff = '</function></content>';
 	buff += '</operation></request>';
 
@@ -356,7 +356,7 @@ API_Session.prototype.getRecFooter = function() {
 /**
  * Send AJAX request
  */
-API_Session.prototype.sendRequest = function(payload, callback) {
+API_Internal_Session.prototype.sendRequest = function(payload, callback) {
 	var xmlDoc = this.getRecHeader()+payload+this.getRecFooter();
 	this.lastRequest = xmlDoc;
 
@@ -391,7 +391,7 @@ API_Session.prototype.sendRequest = function(payload, callback) {
  * Process error returned by API call.
  * Cannot use instance variables.
  */
-API_Session.prototype.checkError = function(responseText, errCallback) {
+API_Internal_Session.prototype.checkError = function(responseText, errCallback) {
 	this.lastResponse = new String(responseText);	// Store for future use
 	
 	var errNode = util_getXmlNodeText(responseText, 'errormessage');
@@ -423,7 +423,7 @@ API_Session.prototype.checkError = function(responseText, errCallback) {
 /**
  * Recursively add fields to XML (fields can be nested)
  */
-API_Session.prototype.processFields = function(fieldsArray)
+API_Internal_Session.prototype.processFields = function(fieldsArray)
 {
     var buff = '';
     if ( fieldsArray instanceof Array ) {
@@ -442,7 +442,7 @@ API_Session.prototype.processFields = function(fieldsArray)
 /**
  * Recursively add one field to XML (fields can be nested)
  */
-API_Session.prototype.processOneField = function(fieldsArray, key)
+API_Internal_Session.prototype.processOneField = function(fieldsArray, key)
 {
     var buff = '';
     var fieldName = key;

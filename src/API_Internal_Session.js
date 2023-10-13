@@ -108,19 +108,55 @@ API_Internal_Session.prototype.ip_readByName = function(object, fields, keys, re
 /**
  * readByQuery API
  */
-API_Internal_Session.prototype.ip_readByQuery = function(object, fields, query, pagesize, returnFormat, callback) {
+// API_Internal_Session.prototype.ip_readByQuery = function(object, fields, query, pagesize, returnFormat, callback) {
 
-	var payload = 
-	'<readByQuery>'+
-		this.xmlNode('object', object)+
-		this.xmlNode('fields', fields)+
-		this.xmlNode('query', query)+
-		this.xmlNode('pagesize', pagesize)+
-		this.xmlNode('returnFormat', returnFormat)+
-	'</readByQuery>';
+// 	var payload = 
+// 	'<readByQuery>'+
+// 		this.xmlNode('object', object)+
+// 		this.xmlNode('fields', fields)+
+// 		this.xmlNode('query', query)+
+// 		this.xmlNode('pagesize', pagesize)+
+// 		this.xmlNode('returnFormat', returnFormat)+
+// 	'</readByQuery>';
 
-    this.sendRequest(payload, callback);
-}
+//     this.sendRequest(payload, callback);
+// }
+
+/**
+ * readByQuery API
+ * 
+ *  returnPromise : Function will optionally return a Promise.  In this event, any passed callback is ignored, and the user is not presented with any error message.
+ */
+ACC_Session.prototype.ip_readByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
+
+	try {
+
+		var payload =
+			'<readByQuery>' +
+			this.xmlNode('object', object) +
+			this.xmlNode('fields', fields) +
+			this.xmlNode('query', query) +
+			this.xmlNode('pagesize', pagesize) +
+			this.xmlNode('returnFormat', returnFormat);
+
+
+		if (docparid != undefined) {
+			payload += this.xmlNode('docparid', docparid);
+		}
+
+		payload += '</readByQuery>';
+
+		if (returnPromise) {
+			return this.sendRequestWithPromise(payload);
+		}
+		else {
+			this.sendRequest(payload, callback);
+		}
+	}
+	catch (ex) {
+		if (returnPromise) { return $.Deferred().reject(ex); } else { throw ex; }
+	}
+};
 
 /**
  * readView API
@@ -385,6 +421,108 @@ API_Internal_Session.prototype.sendRequest = function(payload, callback) {
 	xRequest.setRequestHeader("Connection", "close");
 	xRequest.send(encodedDoc);
 }
+
+/**
+ * Send AJAX request
+ * This is the modified function which returns a Promise.
+ * The promise will resolve with a Javascript object, or reject with an error message text string.
+ * NOTE: This function expects that the request was sent with a returnFormat of 'json'
+ * 
+ * NOTES USING MULTIPLE FUNCTIONS
+ * There are different places to apply a function tag.  Where the function tag is applied determines which operations fail/succeed when an API call is *not* wrapped in a transaction.
+ * The functionTagPlacement parameter is only valid when a payload array is passed.  If the payload object is not an array, the "header" value (see below) will be used.
+ *		functionTagPlacement ==> 
+ *			"header" : This is the default setting in the absence of a value when an XML string is passed for the payload.  A function tag will be placed outside of the supplied payload.  This requires that the XML payload is wrapped in a single function type (i.e. create, update).  If the XML payload has multiple function types, the call will fail.
+ *			"content" : This is the default setting in the absence of a value when an array is passed as the payload. A function tag will be placed outside of each payload item in the supplied array.  The implications are that if one operation fails in a payload item, other payload items can still succeed (though only if useTransaction is set to false)
+ *			"none" : No function tags will be added.  It is expected that the payload will already have function tags supplied.
+ */
+ACC_Session.prototype.sendRequestWithPromise = function (payload, useTransaction, functionTagPlacement, skipErrorChecking) {
+
+	// 0. Define selfip_create
+	var self = this;
+
+	// A. Create deferred object
+	var dfd = $.Deferred();
+
+	// B. Handle if multiple functions are being called
+	if (Array.isArray(payload)) {
+
+		// i. Determine function tag settings
+		var excludeHeaderFunctionTag = functionTagPlacement != "header"; // This will make it so that the only way to INCLUDE a header tag is to specifically request it.
+		var excludeContentFunctionTag = functionTagPlacement == "header" || functionTagPlacement == "none"; // This will make it such that the only way to EXCLUDE a fuction tag from the header is if either of these are specifically set.
+
+		var usingMultipleFunctions = true;
+
+		var xmlDoc = this.getRecHeader(useTransaction, excludeHeaderFunctionTag) + this.getRecContent(payload, excludeContentFunctionTag) + this.getRecFooter(excludeHeaderFunctionTag);
+	}
+	else {
+
+		// i. Determine function tag settings
+		var excludeHeaderFunctionTag = functionTagPlacement == "content" || functionTagPlacement == "none"; // This will make it such that the only way to EXCLUDE a fuction tag from the header is if either of these are specifically set.
+
+		var xmlDoc = this.getRecHeader(useTransaction, excludeHeaderFunctionTag) + payload + this.getRecFooter(excludeHeaderFunctionTag);
+	}
+
+	this.lastRequest = xmlDoc;
+
+	var xRequest = this.getXMLHTTPRequest();
+	if (!xRequest)
+		throw "Cannot create XMLHTTPRequest";
+
+	xRequest.onreadystatechange = function () {
+		if (xRequest.readyState == READY_STATE_COMPLETE) {
+
+			// ===> TO-DO : FIGURE OUT BEST WAY TO HANDLE SUCCESS/FAILURE, SINCE THIS FUNCTION WILL ALSO RECEIVE JSON RESPONSES WITH DATA
+
+			// a. Check if an error was returned
+			var err = null;
+			if (skipErrorChecking == false || skipErrorChecking == undefined) {
+				err = self.getErrorMessage(xRequest.responseText);
+			}
+
+			// b. Reject if error
+			if (err != null) { dfd.reject(err); }
+
+			// c. Otherwise resolve
+			else {
+
+				// i. Try to parse XML to json
+				var json = xmlToJson.parse(xRequest.responseText);
+
+				// ii. If it can't be parsed, it means its not XML, and is presumably a JSON string.  Parse to JSON object.
+				if (json == null) {
+					json = JSON.parse(xRequest.responseText);
+				}
+
+				// iii. Inspect for possible error response // as alternative to try/catch verify if '(json.response.operation.result.status)' exists?
+				if (skipErrorChecking == false || skipErrorChecking == undefined) {
+					try {
+						if (!Array.isArray(json.response.operation.result)) {
+							if (json.response.operation.result.status == "failure") { dfd.reject("Unknown error occurred contacting Intacct on function"); }
+						}
+					}
+					catch (e) {
+						// do nothing
+					}
+				}
+
+				// iii. Resolve json response
+				dfd.resolve(json);
+			}
+		}
+	};
+
+	var url = this.ajaxURL;
+	xRequest.open('POST', url, true);
+	var encodedDoc = 'xmlrequest=' + encodeURIComponent(xmlDoc);
+	xRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	//xRequest.setRequestHeader("Content-length", encodedDoc.length);
+	//xRequest.setRequestHeader("Connection", "close");
+	xRequest.send(encodedDoc);
+
+	// Z. Return Promise
+	return dfd.promise();
+};
 
 
 /**

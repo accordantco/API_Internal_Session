@@ -688,3 +688,9 @@ function util_getXmlNodeText(xmlText, nodeName) {
 		return null;
 	return xmlText.substring(ind1, ind2);
 }
+
+
+module.exports = {
+    API_Internal_Session: API_Internal_Session,
+    util_getXmlNodeText: util_getXmlNodeText,
+};

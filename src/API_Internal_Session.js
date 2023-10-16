@@ -1,11 +1,4 @@
 /**
- * Import Helpers
- */
-import { Logger } from "./logger.js";
-import { xmlToJson } from "./xml2json.js";
-import { utility } from "./utility.js";
-
-/**
  * AJAX API class
  */
 var READY_STATE_COMPLETE = 4;
@@ -13,7 +6,7 @@ var READY_STATE_COMPLETE = 4;
 /**
  * Constructor
  */
-function API_Internal_Session(ajaxURL, senderid, senderpwd, controlid, uniqueid, dtdversion) {
+export default function API_Internal_Session(ajaxURL, senderid, senderpwd, controlid, uniqueid, dtdversion) {
 	this.ajaxURL = ajaxURL;
 	this.senderid = senderid || 'null';
 	this.senderpwd = senderpwd || 'null';

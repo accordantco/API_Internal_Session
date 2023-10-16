@@ -6,7 +6,7 @@ var READY_STATE_COMPLETE = 4;
 /**
  * Constructor
  */
-export default function API_Internal_Session(ajaxURL, senderid, senderpwd, controlid, uniqueid, dtdversion) {
+function API_Internal_Session(ajaxURL, senderid, senderpwd, controlid, uniqueid, dtdversion) {
 	this.ajaxURL = ajaxURL;
 	this.senderid = senderid || 'null';
 	this.senderpwd = senderpwd || 'null';

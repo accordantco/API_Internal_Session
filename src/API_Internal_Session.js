@@ -524,6 +524,89 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 	return dfd.promise();
 };
 
+API_Internal_Session.prototype.getErrorMessage = function (responseText) {
+
+	this.lastResponse = new String(responseText);	// Store for future use.
+
+	var errNode = util_getXmlNodeText(responseText, 'errormessage');
+	if (!errNode)
+		return null;
+
+	// If this point is reached, there is an error
+
+	// b. Define error variables
+	var desc1; var desc2; var corr; var errorNo;
+
+	// a. Parse XML
+	parser = new DOMParser();
+	xmlDoc = parser.parseFromString(responseText, "text/xml");
+
+	// b. Get nodes with "error" (this will return an HTML Collection)
+	var errorNodes = xmlDoc.getElementsByTagName("error");
+
+	// c. Convert HTML Collection to an error
+	var errors = Array.from(errorNodes);
+
+	// d. If there are multiple errors, alert user
+	var multipleErrors = errors.length > 1 ? "Multiple errors exist - the first one is being presented\n" : "";
+
+	// e. Parse error to Json Array
+	var jsonErrorArray = new Array();
+
+	// i. Loop through each error element
+	errors.forEach((errorElement, index) => {
+
+		// ii. If the error element has children (which it should), loop through to create the error object
+		if (errorElement.children != undefined) {
+
+			// iii. Fill error object
+			var errorObject = {};
+			for (var i = 0; i < errorElement.children.length; i++) {
+				errorObject[errorElement.children[i].tagName] = errorElement.children[i].textContent;
+			}
+
+			// iv. Add error object to jsonErrorArray
+			jsonErrorArray.push(errorObject);
+		}
+
+		// Important : The property names 'description', 'description2', 'correction', and 'errorno' are expected to be returned in the Intacct XML error response.
+		//			   If Intacct changes these names, you will need to modify this code.
+		desc1 = jsonErrorArray[0].description; desc2 = jsonErrorArray[0].description2; corr = jsonErrorArray[0].correction; errorNo = jsonErrorArray[0].errorno;
+	});
+
+	// ==> Logger
+	if (this.logger != null) {
+
+		// NOTE: FOR INTACCT ERRORS, YOU ARE LOGGING AS A NORMAL ENTRY AND HANDLING FORMATTING HERE
+		this.logger.writeEntry("ERROR => Intacct API Errors Occurred (" + jsonErrorArray.length + " Total) :");
+		jsonErrorArray.forEach((element, index) => {
+			var errorCount = index + 1;
+			this.logger.writeEntry("-- Intacct Error #" + errorCount + " --");
+			this.logger.writeEntry("desc: " + element.description); this.logger.writeEntry("desc2: " + element.description2); this.logger.writeEntry("corr: " + element.correction); this.logger.writeEntry("errno: " + element.errorno);
+			this.logger.addError("desc: " + element.description + " | " + "desc2: " + element.description2 + " | " + "corr: " + element.correction + " | " + "errno: " + element.errorno);
+		});
+	}
+
+	// var desc1 = util_getXmlNodeText(errNode, 'description');
+	// var desc2 = util_getXmlNodeText(errNode, 'description2');
+	// var corr = util_getXmlNodeText(errNode, 'correction');
+
+	if (!desc1 && !desc2 && !corr) {
+		message = errNode;
+	} else {
+		message = "";
+		if (multipleErrors) message = message + multipleErrors + "\n";
+		if (desc1) message = message + desc1 + "\n\n";
+		if (desc2) message = message + desc2 + "\n\n";
+		if (corr) message = message + corr + "\n\n";
+	}
+
+	var txt = document.createElement("textarea");
+	txt.innerHTML = message;
+
+	return txt.value.trim();
+};
+
 
 /**
  * Process error returned by API call.

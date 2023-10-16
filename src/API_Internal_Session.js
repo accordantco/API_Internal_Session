@@ -1,4 +1,11 @@
 /**
+ * Import Helpers
+ */
+import { Logger } from "./logger";
+import { xmlToJson } from "./xml2json";
+import { utility } from "./utility";
+
+/**
  * AJAX API class
  */
 var READY_STATE_COMPLETE = 4;

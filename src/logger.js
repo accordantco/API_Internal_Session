@@ -2,7 +2,7 @@
 // This is functionality related to logging
 // -------------------------------------------------------------------------------------------------------------------------------------//
 
-function Logger() {
+export function Logger() {
 
     // Create array for new entries
     this.entries = new Array();

@@ -41,7 +41,7 @@ if (typeof Object.assign != 'function') {
 * @method xmlToJson
 * @returns {Object}
 */
-var xmlToJson = (function () {
+export var xmlToJson = (function () {
     var self = this;
 
 

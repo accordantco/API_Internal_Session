@@ -414,7 +414,7 @@ API_Internal_Session.prototype.sendRequest = function(payload, callback) {
 	};
 
 	var url = this.ajaxURL;
-	xRequest.open('POST', url, true);
+	xRequest.open('POST', url, false);
 	var encodedDoc = 'xmlrequest=' + encodeURIComponent(xmlDoc);
 	xRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	xRequest.setRequestHeader("Content-length", encodedDoc.length);
@@ -513,7 +513,7 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 	};
 
 	var url = this.ajaxURL;
-	xRequest.open('POST', url, true);
+	xRequest.open('POST', url, false);
 	var encodedDoc = 'xmlrequest=' + encodeURIComponent(xmlDoc);
 	xRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	//xRequest.setRequestHeader("Content-length", encodedDoc.length);

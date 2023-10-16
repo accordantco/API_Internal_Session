@@ -469,48 +469,9 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 	if (!xRequest)
 		throw "Cannot create XMLHTTPRequest";
 
-	xRequest.onreadystatechange = function () {
-		if (xRequest.readyState == READY_STATE_COMPLETE) {
-
-			// ===> TO-DO : FIGURE OUT BEST WAY TO HANDLE SUCCESS/FAILURE, SINCE THIS FUNCTION WILL ALSO RECEIVE JSON RESPONSES WITH DATA
-
-			// a. Check if an error was returned
-			var err = null;
-			if (skipErrorChecking == false || skipErrorChecking == undefined) {
-				err = self.getErrorMessage(xRequest.responseText);
-			}
-
-			// b. Reject if error
-			if (err != null) { dfd.reject(err); }
-
-			// c. Otherwise resolve
-			else {
-
-				// i. Try to parse XML to json
-				var json = xmlToJson.parse(xRequest.responseText);
-
-				// ii. If it can't be parsed, it means its not XML, and is presumably a JSON string.  Parse to JSON object.
-				if (json == null) {
-					json = JSON.parse(xRequest.responseText);
-				}
-
-				// iii. Inspect for possible error response // as alternative to try/catch verify if '(json.response.operation.result.status)' exists?
-				if (skipErrorChecking == false || skipErrorChecking == undefined) {
-					try {
-						if (!Array.isArray(json.response.operation.result)) {
-							if (json.response.operation.result.status == "failure") { dfd.reject("Unknown error occurred contacting Intacct on function"); }
-						}
-					}
-					catch (e) {
-						// do nothing
-					}
-				}
-
-				// iii. Resolve json response
-				dfd.resolve(json);
-			}
-		}
-	};
+	// xRequest.onreadystatechange = function () {
+		
+	// };
 
 	var url = this.ajaxURL;
 	xRequest.open('POST', url, false);
@@ -521,7 +482,47 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 	xRequest.send(encodedDoc);
 
 	// Z. Return Promise
-	return dfd.promise();
+	// return dfd.promise();
+	if (xRequest.readyState == READY_STATE_COMPLETE) {
+
+		// ===> TO-DO : FIGURE OUT BEST WAY TO HANDLE SUCCESS/FAILURE, SINCE THIS FUNCTION WILL ALSO RECEIVE JSON RESPONSES WITH DATA
+
+		// a. Check if an error was returned
+		var err = null;
+		if (skipErrorChecking == false || skipErrorChecking == undefined) {
+			err = self.getErrorMessage(xRequest.responseText);
+		}
+
+		// b. Reject if error
+		if (err != null) { return err; }
+
+		// c. Otherwise resolve
+		else {
+
+			// i. Try to parse XML to json
+			var json = xmlToJson.parse(xRequest.responseText);
+
+			// ii. If it can't be parsed, it means its not XML, and is presumably a JSON string.  Parse to JSON object.
+			if (json == null) {
+				json = JSON.parse(xRequest.responseText);
+			}
+
+			// iii. Inspect for possible error response // as alternative to try/catch verify if '(json.response.operation.result.status)' exists?
+			if (skipErrorChecking == false || skipErrorChecking == undefined) {
+				try {
+					if (!Array.isArray(json.response.operation.result)) {
+						if (json.response.operation.result.status == "failure") { return "Unknown error occurred contacting Intacct on function"; }
+					}
+				}
+				catch (e) {
+					// do nothing
+				}
+			}
+
+			// iii. Resolve json response
+			return json;
+		}
+	}
 };
 
 API_Internal_Session.prototype.getErrorMessage = function (responseText) {

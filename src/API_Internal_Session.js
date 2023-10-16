@@ -1,9 +1,9 @@
 /**
  * Import Helpers
  */
-import { Logger } from "./logger";
-import { xmlToJson } from "./xml2json";
-import { utility } from "./utility";
+import { Logger } from "./logger.js";
+import { xmlToJson } from "./xml2json.js";
+import { utility } from "./utility.js";
 
 /**
  * AJAX API class

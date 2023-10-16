@@ -429,7 +429,7 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 	var self = this;
 
 	// A. Create deferred object
-	var dfd = jq.Deferred();
+	// var dfd = jq.Deferred();
 
 	// B. Handle if multiple functions are being called
 	if (Array.isArray(payload)) {
@@ -481,7 +481,7 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 		}
 
 		// b. Reject if error
-		if (err != null) { return err; }
+		if (err != null) { return {type: "error", message: err }; }
 
 		// c. Otherwise resolve
 		else {
@@ -507,7 +507,7 @@ API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTr
 			}
 
 			// iii. Resolve json response
-			return json;
+			return {type: "success", message: json };
 		}
 	}
 };

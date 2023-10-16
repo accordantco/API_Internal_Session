@@ -110,7 +110,7 @@ API_Internal_Session.prototype.ip_readByName = function(object, fields, keys, re
  * 
  *  returnPromise : Function will optionally return a Promise.  In this event, any passed callback is ignored, and the user is not presented with any error message.
  */
-API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid, vendorid) {
+API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
 
 	try {
 
@@ -125,10 +125,6 @@ API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query,
 
 		if (docparid != undefined) {
 			payload += this.xmlNode('docparid', docparid);
-		}
-
-		if (vendorid != undefined) {
-			payload += this.xmlNode('vendorid', vendorid);
 		}
 
 		payload += '</readByQuery>';

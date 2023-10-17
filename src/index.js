@@ -1,4 +1,4 @@
-var xmlToJson = require('./xml2json.js');
+import xmlToJson from './xml2json.js';
 
 /**
  * AJAX API class
@@ -690,3 +690,5 @@ function util_getXmlNodeText(xmlText, nodeName) {
 		return null;
 	return xmlText.substring(ind1, ind2);
 }
+
+export default API_Internal_Session;

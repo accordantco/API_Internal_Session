@@ -5,8 +5,6 @@ import xmlToJson from './xml2json.js';
  */
 var READY_STATE_COMPLETE = 4;
 
-console.log(jed);
-
 /**
  * Constructor
  */

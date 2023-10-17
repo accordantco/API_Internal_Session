@@ -1,4 +1,4 @@
-var xmlToJson = requre('./app/xml2json.js');
+var xmlToJson = requre('./xml2json.js');
 
 /**
  * AJAX API class

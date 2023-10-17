@@ -266,6 +266,5 @@ var xmlToJson = (function () {
         }
     }
 })();
-module.exports = {
-    xmlToJson: xmlToJson,
-};
+
+export default xmlToJson;

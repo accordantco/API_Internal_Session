@@ -691,4 +691,5 @@ function util_getXmlNodeText(xmlText, nodeName) {
 	return xmlText.substring(ind1, ind2);
 }
 
+// Make this function accessible after minification
 window.API_Internal_Session = API_Internal_Session;

@@ -26,10 +26,9 @@ After making changes to `src/index.js`, follow these steps:
 
 1. Create a new folder/directory under `/dist` for your bundle to be created
 2. Edit `webpack.config.js` under the output path, replace the current folder/directory with the one you just created
-3. Edit the `package.json` version to the version you are creating
-4. Run `npm run build`
-5. Confirm that your folder/directory has a new `bundle.js` file in it
-6. run the following commands:
+3. Edit the `package.json` version to the version you are creating (folder name)
+4. Confirm that your folder/directory has a new `bundle.js` file in it
+5. run the following commands:
 ```
    > git add .
    > git commit -m "<YOUR MESSAGE HERE>"

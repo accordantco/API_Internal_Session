@@ -10,7 +10,7 @@ This code's aim is to create a customized API_Session for Sage Intacct. All code
 ## Usage
 Add the following script to your Sage Intacct PageScript:
 ```
-<script src="https://accordantco-internal-api.netlify.app/dist/bundle.js"></script>
+<script src="https://accordantco-internal-api.netlify.app/dist/latest/bundle.js"></script>
 ```
 
 ## Contributing
@@ -21,7 +21,7 @@ Add the following script to your Sage Intacct PageScript:
 > npm install
 > git checkout develop
 ```
-### Staging, Committing, & Deploying
+### Building, Staging, Committing, & Deploying
 After making changes to `src/index.js`, follow these steps:
 
 1. Create a new folder/directory under `/dist` for your bundle to be created

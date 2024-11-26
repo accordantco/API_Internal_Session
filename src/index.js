@@ -113,7 +113,7 @@ API_Internal_Session.prototype.ip_readByName = function(object, fields, keys, re
 	 * 
 	 *  returnPromise : Function will optionally return a Promise.  In this event, any passed callback is ignored, and the user is not presented with any error message.
 	 */
-	ACC_Session.prototype.ip_readByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
+	API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
 
 		try {
 
@@ -514,7 +514,7 @@ API_Internal_Session.prototype.sendRequest = function(payload, callback) {
 	 *			"content" : This is the default setting in the absence of a value when an array is passed as the payload. A function tag will be placed outside of each payload item in the supplied array.  The implications are that if one operation fails in a payload item, other payload items can still succeed (though only if useTransaction is set to false)
 	 *			"none" : No function tags will be added.  It is expected that the payload will already have function tags supplied.
 	 */			
-	 ACC_Session.prototype.sendRequestWithPromise = function (payload, useTransaction, functionTagPlacement, skipErrorChecking) {
+	 API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTransaction, functionTagPlacement, skipErrorChecking) {
 
 		// 0. Define selfip_create
 		var self = this;
@@ -607,7 +607,7 @@ API_Internal_Session.prototype.sendRequest = function(payload, callback) {
 	 * Will return null if no error message is found.
 	 * Because this function is typically called in a callback, the 'this' reference refers to window, and therefore a reference to the calling object is passed.
 	 */
-	ACC_Session.prototype.getErrorMessage = function (responseText) {
+	API_Internal_Session.prototype.getErrorMessage = function (responseText) {
 
 		this.lastResponse = new String(responseText);	// Store for future use.
 

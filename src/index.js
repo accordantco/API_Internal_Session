@@ -149,7 +149,7 @@ API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query,
  * 
  *  returnPromise : Function will optionally return a Promise.  In this event, any passed callback is ignored, and the user is not presented with any error message.
  */
-ACC_Session.prototype.ip_readAllByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
+API_Internal_Session.prototype.ip_readAllByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
 
 	var self = this;
 	var accumulatedData = [];
@@ -236,7 +236,7 @@ API_Internal_Session.prototype.ip_readView = function(view, filters, pagesize, r
 /**
  * readMore API
  */
-ACC_Session.prototype.ip_readMore = function (object, callback, type, returnPromise, resultId) {
+API_Internal_Session.prototype.ip_readMore = function (object, callback, type, returnPromise, resultId) {
 
 	try {
 

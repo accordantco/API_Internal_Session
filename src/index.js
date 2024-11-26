@@ -178,9 +178,9 @@ API_Internal_Session.prototype.ip_readAllByQuery = async function (object, field
 
 		// 3. Perform initial query and wait for response
 		var response = await api.ip_readByQuery(object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid);
-
+		console.log(response);
 		// 4. Parse response; If result.status is not "success" reject
-		var result = response.response.operation.result;
+		var result = response.message.response.operation.result;
 		if (result.status != "success") {
 			dfd.reject("Result Status From Intacct Was Not 'Success' In Initial Read");
 		}

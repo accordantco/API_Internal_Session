@@ -1,4 +1,5 @@
 import xmlToJson from './xml2json.js';
+import { utility } from './utility.js';
 
 /**
  * AJAX API class

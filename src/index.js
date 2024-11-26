@@ -124,7 +124,7 @@ API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query,
 			this.xmlNode('query', query) +
 			this.xmlNode('pagesize', pagesize) +
 			this.xmlNode('returnFormat', returnFormat);
-
+			
 
 		if (docparid != undefined) {
 			payload += this.xmlNode('docparid', docparid);

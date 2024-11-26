@@ -151,7 +151,7 @@ API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query,
 API_Internal_Session.prototype.ip_readAllByQuery = async function (object, fields, query, pagesize, api, intacctQueryStatus, docparid) {
 
 	// 1. Create return dfd
-	var dfd = $.Deferred();
+	var dfd = jq.Deferred();
 
 	// 2. Init vars
 	var self = this;

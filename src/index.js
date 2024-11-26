@@ -144,6 +144,119 @@ API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query,
 };
 
 /**
+ * readAllByQuery API
+ * 
+ *  returnPromise : Function will optionally return a Promise.  In this event, any passed callback is ignored, and the user is not presented with any error message.
+ */
+API_Internal_Session.prototype.ip_readAllByQuery = async function (object, fields, query, pagesize, api, intacctQueryStatus, docparid) {
+
+	// 1. Create return dfd
+	var dfd = $.Deferred();
+
+	// 2. Init vars
+	var self = this;
+	var accumulatedData = [];
+
+	// 3. Set new control id
+	api.controlid = utility.CreateGUID();
+
+	// 4. Await calls will reject if errors occur and be caught
+	try
+	{
+
+		// NOTE: Intacct appears to return object names back in lowercase; THIS WILL CAUSE A PROBLEM IF INTACCT DOES NOT RETURN A LOWERCASE OBJECT NAME
+		// POTENTIALLY : In the future, iterate through object keys and make them all lowercase for consistency
+		object = object.toLowerCase();
+
+		// NOTE: Return format MUST be XML
+		var returnFormat = "xml";
+
+		// NOTE: You must use this function with a promise
+		var returnPromise = true;
+		var callback = null;
+
+		// 3. Perform initial query and wait for response
+		var response = await api.ip_readByQuery(object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid);
+
+		// 4. Parse response; If result.status is not "success" reject
+		var result = response.response.operation.result;
+		if (result.status != "success") {
+			dfd.reject("Result Status From Intacct Was Not 'Success' In Initial Read");
+		}
+
+		// 5. Continue processing
+		else
+		{
+
+			// 6. Get data from initial response and establish iteration counter
+			var currentData = result.data[object];
+			var resultId = result.data['resultId'];
+
+			var i = 1;
+
+			// Notes On Count ==>
+			// result.data.count = count returned on this call
+			// result.data.numremaining = number of values still needing to be retrieved (note that this will be the string value "0" if no results are remaining)
+			// result.data.totalcount = total number of values that exist on the query
+
+			// Notes : On first iteration need the result to have a number count (since a response less than the PageSize would return NumRemaining = 0)
+			//         On second iteration, result.Count won't have changed from original iteration, but NumRemaining will be valid to trigger loop
+			while ((i == 1 && result.data.count > 0) || result.data.numremaining > 0) {
+
+				// a. If this is first iteration, process results you currently have before trying to get next batch.
+				if (i == 1) {
+
+					// b. Push data to finalData array
+					accumulatedData = accumulatedData.concat(currentData);
+
+					// c. If provided, set totalcount/count on intacctQueryStatus
+					if (intacctQueryStatus != undefined) { intacctQueryStatus.setTotalCount(result.data.totalcount); }
+					if (intacctQueryStatus != undefined) { intacctQueryStatus.addCurrentCount(result.data.count); }
+
+				}
+				// b. If this is second iteration, you need to perform a readMore
+				else {
+
+					// i. Perform readMore query and await response
+					response = await api.ip_readMore(object, null, null, true, resultId);
+
+					// ii. Get result object
+					result = response.response.operation.result;
+					if (result.status != "success") {
+						dfd.reject("Result Status From Intacct Was Not 'Success' In ReadMore Function");
+					}
+					else {
+
+						// iii. Get current data
+						currentData = result.data[object];
+
+						// iv. Push data to finalData array
+						accumulatedData = accumulatedData.concat(currentData);
+
+						// v. If provided, add to count on intacctQueryStatus
+						if (intacctQueryStatus != undefined) { intacctQueryStatus.addCurrentCount(result.data.count); }
+					}
+				}
+
+				// Increment counter
+				i++;
+			}
+		}
+
+		// vi. Resolve with accumulated data
+		dfd.resolve(accumulatedData);
+	}
+	// This will catch rejections in api.ip_readByQuery and api.ip_readMore
+	catch (ex) {
+		dfd.reject(ex);
+	}
+
+	// This is an asynchronous function with await in use.  This dfd will not be returned until the function is complete, at which point
+	// it should already have been either rejected or resolved.
+	return dfd;
+};
+
+/**
  * readView API
  */
 API_Internal_Session.prototype.ip_readView = function(view, filters, pagesize, returnFormat, callback) {

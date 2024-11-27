@@ -163,18 +163,14 @@ API_Internal_Session.prototype.ip_readView = function(view, filters, pagesize, r
 /**
  * readMore API
  */
-API_Internal_Session.prototype.ip_readMore = function(object, callback, type, returnPromise) {
+API_Internal_Session.prototype.ip_readMore = function(object, callback, type, ignoreError) {
 
 	var payload =
 	'<readMore>'+
 		this.xmlNode(type == null ? 'object' : type, object)+
 	'</readMore>';
 
-	if (returnPromise) {
-		this.sendRequestWithPromise(payload, callback);
-	} else {
-		this.sendRequest(payload, callback);
-	}
+    this.sendRequest(payload, callback, ignoreError);
 }
 
 /**
@@ -381,7 +377,7 @@ API_Internal_Session.prototype.getRecFooter = function() {
 /**
  * Send AJAX request
  */
-API_Internal_Session.prototype.sendRequest = function(payload, callback) {
+API_Internal_Session.prototype.sendRequest = function(payload, callback, ignoreError) {
 	var xmlDoc = this.getRecHeader()+payload+this.getRecFooter();
 	this.lastRequest = xmlDoc;
 
@@ -395,7 +391,7 @@ API_Internal_Session.prototype.sendRequest = function(payload, callback) {
 	
 	xRequest.onreadystatechange = function() {
 		if (xRequest.readyState == READY_STATE_COMPLETE) {
-			if (errProc(xRequest.responseText, errCallback))
+			if (errProc(xRequest.responseText, errCallback) && !ignoreError)
 				return;
 			if (callback)
 				callback(xRequest.responseText);

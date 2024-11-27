@@ -1,5 +1,4 @@
 import xmlToJson from './xml2json.js';
-import { utility } from './utility.js';
 
 /**
  * AJAX API class
@@ -108,112 +107,40 @@ API_Internal_Session.prototype.ip_readByName = function(object, fields, keys, re
     this.sendRequest(payload, callback);
 }
 
-	/**
-	 * readByQuery API
-	 * 
-	 *  returnPromise : Function will optionally return a Promise.  In this event, any passed callback is ignored, and the user is not presented with any error message.
-	 */
-	API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
-
-		try {
-
-			var payload =
-				'<readByQuery>' +
-				this.xmlNode('object', object) +
-				this.xmlNode('fields', fields) +
-				this.xmlNode('query', query) +
-				this.xmlNode('pagesize', pagesize) +
-				this.xmlNode('returnFormat', returnFormat);
-				
-
-			if (docparid != undefined) {
-				payload += this.xmlNode('docparid', docparid);
-			}
-
-			payload += '</readByQuery>';
-
-			if (returnPromise) {
-				return this.sendRequestWithPromise(payload);
-			}
-			else {
-				this.sendRequest(payload, callback);
-			}
-		}
-		catch (ex) {
-			if (returnPromise) { return jq.Deferred().reject(ex); } else { throw ex; }
-		}
-	};
-
 /**
- * readAllByQuery API
+ * readByQuery API
  * 
  *  returnPromise : Function will optionally return a Promise.  In this event, any passed callback is ignored, and the user is not presented with any error message.
  */
-API_Internal_Session.prototype.ip_readAllByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
+API_Internal_Session.prototype.ip_readByQuery = function (object, fields, query, pagesize, returnFormat, callback, returnPromise, docparid) {
 
-	var self = this;
-	var accumulatedData = [];
+	try {
 
-	// 3. Set new control id
-	this.controlid = utility.CreateGUID();
+		var payload =
+			'<readByQuery>' +
+			this.xmlNode('object', object) +
+			this.xmlNode('fields', fields) +
+			this.xmlNode('query', query) +
+			this.xmlNode('pagesize', pagesize) +
+			this.xmlNode('returnFormat', returnFormat);
 
-	this.ip_readByQuery(object, fields, query, pagesize, "xml", callback, returnPromise, docparid).then(function (response) {
 
-		object = object.toLowerCase();
+		if (docparid != undefined) {
+			payload += this.xmlNode('docparid', docparid);
+		}
 
-		var result = response.response.operation.result;
-		if (result.status != "success") {
-			//reject
+		payload += '</readByQuery>';
+
+		if (returnPromise) {
+			return this.sendRequestWithPromise(payload);
 		}
 		else {
-
-			var currentData = result.data[object];
-			var numremaining = result.data.numremaining;
-			var i = 1;
-
-			// Notes : On first iteration need the result to have a number count (since a response less than the PageSize would return NumRemaining = 0)
-			//         On second iteration, result.Count won't have changed from original iteration, but NumRemaining will be valid to trigger loop
-			while ((i == 1 && result.data.count > 0) || result.data.numremaining > 0) {
-
-				// a. If this is first iteration, process results you currently have before trying to get next batch.
-				if (i == 1) {
-
-					// b. Push data to finalData array
-					accumulatedData.concat(currentData);
-				}
-				else {
-
-					// i. Create the ReadMore object
-					// ip_readMore(object, callback, type, returnPromise)
-					var response = self.ip_readMore(object, null, null, true, this.controlid);
-					//self.ip_readMore(object, null, null, true).then(function (response) {
-
-						// ii. Get result object
-						result = response.response.operation.result;
-						if (result.status != "success") {
-							//reject
-						}
-
-						// iii. Get current data
-						currentData = result.data[object];
-
-						// iv. Push data to finalData array
-						accumulatedData.concat(currentData);
-
-				}
-
-				// Increment counter
-				i++;
-
-			}
+			this.sendRequest(payload, callback);
 		}
-
-	}).catch(function (ex) {
+	}
+	catch (ex) {
 		if (returnPromise) { return jq.Deferred().reject(ex); } else { throw ex; }
-	});
-
-
-
+	}
 };
 
 /**
@@ -236,35 +163,19 @@ API_Internal_Session.prototype.ip_readView = function(view, filters, pagesize, r
 /**
  * readMore API
  */
-API_Internal_Session.prototype.ip_readMore = function (object, callback, type, returnPromise, resultId) {
+API_Internal_Session.prototype.ip_readMore = function(object, callback, type, returnPromise) {
 
-	try {
+	var payload =
+	'<readMore>'+
+		this.xmlNode(type == null ? 'object' : type, object)+
+	'</readMore>';
 
-		var payload;
-		if (resultId == undefined) {
-			payload =
-				'<readMore>' +
-				this.xmlNode(type == null ? 'object' : type, object) +
-				'</readMore>';
-		}
-		else {
-			payload =
-				'<readMore>' +
-					this.xmlNode('resultId', resultId) +
-				'</readMore>';
-		}
-
-		if (returnPromise) {
-			return this.sendRequestWithPromise(payload);
-		}
-		else {
-			this.sendRequest(payload, callback);
-		}
+	if (returnPromise) {
+		this.sendRequestWithPromise(payload, callback);
+	} else {
+		this.sendRequest(payload, callback);
 	}
-	catch (ex) {
-		if (returnPromise) { return jq.Deferred().reject(ex); } else { throw ex; }
-	}
-};
+}
 
 /**
  * readMoreObject API
@@ -500,195 +411,108 @@ API_Internal_Session.prototype.sendRequest = function(payload, callback) {
 	xRequest.send(encodedDoc);
 }
 
-	/**
-	 * Send AJAX request
-	 * This is the modified function which returns a Promise.
-	 * The promise will resolve with a Javascript object, or reject with an error message text string.
-	 * NOTE: This function expects that the request was sent with a returnFormat of 'json'
-	 * 
-	 * NOTES USING MULTIPLE FUNCTIONS
-	 * There are different places to apply a function tag.  Where the function tag is applied determines which operations fail/succeed when an API call is *not* wrapped in a transaction.
-	 * The functionTagPlacement parameter is only valid when a payload array is passed.  If the payload object is not an array, the "header" value (see below) will be used.
-	 *		functionTagPlacement ==> 
-	 *			"header" : This is the default setting in the absence of a value when an XML string is passed for the payload.  A function tag will be placed outside of the supplied payload.  This requires that the XML payload is wrapped in a single function type (i.e. create, update).  If the XML payload has multiple function types, the call will fail.
-	 *			"content" : This is the default setting in the absence of a value when an array is passed as the payload. A function tag will be placed outside of each payload item in the supplied array.  The implications are that if one operation fails in a payload item, other payload items can still succeed (though only if useTransaction is set to false)
-	 *			"none" : No function tags will be added.  It is expected that the payload will already have function tags supplied.
-	 */			
-	 API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTransaction, functionTagPlacement, skipErrorChecking) {
+/**
+ * Send AJAX request
+ * This is the modified function which returns a Promise.
+ * The promise will resolve with a Javascript object, or reject with an error message text string.
+ * NOTE: This function expects that the request was sent with a returnFormat of 'json'
+ * 
+ * NOTES USING MULTIPLE FUNCTIONS
+ * There are different places to apply a function tag.  Where the function tag is applied determines which operations fail/succeed when an API call is *not* wrapped in a transaction.
+ * The functionTagPlacement parameter is only valid when a payload array is passed.  If the payload object is not an array, the "header" value (see below) will be used.
+ *		functionTagPlacement ==> 
+ *			"header" : This is the default setting in the absence of a value when an XML string is passed for the payload.  A function tag will be placed outside of the supplied payload.  This requires that the XML payload is wrapped in a single function type (i.e. create, update).  If the XML payload has multiple function types, the call will fail.
+ *			"content" : This is the default setting in the absence of a value when an array is passed as the payload. A function tag will be placed outside of each payload item in the supplied array.  The implications are that if one operation fails in a payload item, other payload items can still succeed (though only if useTransaction is set to false)
+ *			"none" : No function tags will be added.  It is expected that the payload will already have function tags supplied.
+ */
+API_Internal_Session.prototype.sendRequestWithPromise = function (payload, useTransaction, functionTagPlacement, skipErrorChecking) {
 
-		// 0. Define selfip_create
-		var self = this;
+	// 0. Define selfip_create
+	var self = this;
 
-		// A. Create deferred object
-		var dfd = jq.Deferred();
+	// A. Create deferred object
+	// var dfd = jq.Deferred();
 
-		// B. Handle if multiple functions are being called
-		if (Array.isArray(payload)) {
+	// B. Handle if multiple functions are being called
+	if (Array.isArray(payload)) {
 
-			// i. Determine function tag settings
-			var excludeHeaderFunctionTag = functionTagPlacement != "header"; // This will make it so that the only way to INCLUDE a header tag is to specifically request it.
-			var excludeContentFunctionTag = functionTagPlacement == "header" || functionTagPlacement == "none"; // This will make it such that the only way to EXCLUDE a fuction tag from the header is if either of these are specifically set.
+		// i. Determine function tag settings
+		var excludeHeaderFunctionTag = functionTagPlacement != "header"; // This will make it so that the only way to INCLUDE a header tag is to specifically request it.
+		var excludeContentFunctionTag = functionTagPlacement == "header" || functionTagPlacement == "none"; // This will make it such that the only way to EXCLUDE a fuction tag from the header is if either of these are specifically set.
 
-			var usingMultipleFunctions = true;
+		var usingMultipleFunctions = true;
 
-			var xmlDoc = this.getRecHeader(useTransaction, excludeHeaderFunctionTag) + this.getRecContent(payload, excludeContentFunctionTag) + this.getRecFooter(excludeHeaderFunctionTag);
+		var xmlDoc = this.getRecHeader(useTransaction, excludeHeaderFunctionTag) + this.getRecContent(payload, excludeContentFunctionTag) + this.getRecFooter(excludeHeaderFunctionTag);
+	}
+	else {
+
+		// i. Determine function tag settings
+		var excludeHeaderFunctionTag = functionTagPlacement == "content" || functionTagPlacement == "none"; // This will make it such that the only way to EXCLUDE a fuction tag from the header is if either of these are specifically set.
+
+		var xmlDoc = this.getRecHeader(useTransaction, excludeHeaderFunctionTag) + payload + this.getRecFooter(excludeHeaderFunctionTag);
+	}
+
+	this.lastRequest = xmlDoc;
+
+	var xRequest = this.getXMLHTTPRequest();
+	if (!xRequest)
+		throw "Cannot create XMLHTTPRequest";
+
+	// xRequest.onreadystatechange = function () {
+		
+	// };
+
+	var url = this.ajaxURL;
+	xRequest.open('POST', url, false);
+	var encodedDoc = 'xmlrequest=' + encodeURIComponent(xmlDoc);
+	xRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	//xRequest.setRequestHeader("Content-length", encodedDoc.length);
+	//xRequest.setRequestHeader("Connection", "close");
+	xRequest.send(encodedDoc);
+
+	// Z. Return Promise
+	// return dfd.promise();
+	if (xRequest.readyState == READY_STATE_COMPLETE) {
+
+		// ===> TO-DO : FIGURE OUT BEST WAY TO HANDLE SUCCESS/FAILURE, SINCE THIS FUNCTION WILL ALSO RECEIVE JSON RESPONSES WITH DATA
+
+		// a. Check if an error was returned
+		var err = null;
+		if (skipErrorChecking == false || skipErrorChecking == undefined) {
+			err = self.getErrorMessage(xRequest.responseText);
 		}
+
+		// b. Reject if error
+		if (err != null) { return {type: "error", message: err }; }
+
+		// c. Otherwise resolve
 		else {
 
-			// i. Determine function tag settings
-			var excludeHeaderFunctionTag = functionTagPlacement == "content" || functionTagPlacement == "none"; // This will make it such that the only way to EXCLUDE a fuction tag from the header is if either of these are specifically set.
+			// i. Try to parse XML to json
+			var json = xmlToJson.parse(xRequest.responseText);
 
-			var xmlDoc = this.getRecHeader(useTransaction, excludeHeaderFunctionTag) + payload + this.getRecFooter(excludeHeaderFunctionTag);
-		}
-
-		this.lastRequest = xmlDoc;
-
-		var xRequest = this.getXMLHTTPRequest();
-		if (!xRequest)
-			throw "Cannot create XMLHTTPRequest";
-
-		xRequest.onreadystatechange = function () {
-			if (xRequest.readyState == READY_STATE_COMPLETE) {
-
-				// ===> TO-DO : FIGURE OUT BEST WAY TO HANDLE SUCCESS/FAILURE, SINCE THIS FUNCTION WILL ALSO RECEIVE JSON RESPONSES WITH DATA
-
-				// a. Check if an error was returned
-				var err = null;
-				if (skipErrorChecking == false || skipErrorChecking == undefined) {
-					err = self.getErrorMessage(xRequest.responseText);
-				}
-
-				// b. Reject if error
-				if (err != null) { dfd.reject(err); }
-
-				// c. Otherwise resolve
-				else {
-
-					// i. Try to parse XML to json
-					var json = xmlToJson.parse(xRequest.responseText);
-
-					// ii. If it can't be parsed, it means its not XML, and is presumably a JSON string.  Parse to JSON object.
-					if (json == null) {
-						json = JSON.parse(xRequest.responseText);
-					}
-
-					// iii. Inspect for possible error response // as alternative to try/catch verify if '(json.response.operation.result.status)' exists?
-					if (skipErrorChecking == false || skipErrorChecking == undefined) {
-						try {
-							if (!Array.isArray(json.response.operation.result)) {
-								if (json.response.operation.result.status == "failure") { dfd.reject("Unknown error occurred contacting Intacct on function"); }
-							}
-						}
-						catch (e) {
-							// do nothing
-						}
-					}
-
-					// iii. Resolve json response
-					dfd.resolve(json);
-				}
-			}
-		};
-
-		var url = this.ajaxURL;
-		xRequest.open('POST', url, true);
-		var encodedDoc = 'xmlrequest=' + encodeURIComponent(xmlDoc);
-		xRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-		//xRequest.setRequestHeader("Content-length", encodedDoc.length);
-		//xRequest.setRequestHeader("Connection", "close");
-		xRequest.send(encodedDoc);
-
-		// Z. Return Promise
-		return dfd.promise();
-	};
-
-	/**
-	 * Takes a responseText and parses it to see if there are any error messages
-	 * Will return null if no error message is found.
-	 * Because this function is typically called in a callback, the 'this' reference refers to window, and therefore a reference to the calling object is passed.
-	 */
-	API_Internal_Session.prototype.getErrorMessage = function (responseText) {
-
-		this.lastResponse = new String(responseText);	// Store for future use.
-
-		var errNode = util_getXmlNodeText(responseText, 'errormessage');
-		if (!errNode)
-			return null;
-
-		// If this point is reached, there is an error
-
-		// b. Define error variables
-		var desc1; var desc2; var corr; var errorNo;
-
-		// a. Parse XML
-		parser = new DOMParser();
-		xmlDoc = parser.parseFromString(responseText, "text/xml");
-
-		// b. Get nodes with "error" (this will return an HTML Collection)
-		var errorNodes = xmlDoc.getElementsByTagName("error");
-
-		// c. Convert HTML Collection to an error
-		var errors = Array.from(errorNodes);
-
-		// d. If there are multiple errors, alert user
-		var multipleErrors = errors.length > 1 ? "Multiple errors exist - the first one is being presented\n" : "";
-
-		// e. Parse error to Json Array
-		var jsonErrorArray = new Array();
-
-		// i. Loop through each error element
-		errors.forEach((errorElement, index) => {
-
-			// ii. If the error element has children (which it should), loop through to create the error object
-			if (errorElement.children != undefined) {
-
-				// iii. Fill error object
-				var errorObject = {};
-				for (var i = 0; i < errorElement.children.length; i++) {
-					errorObject[errorElement.children[i].tagName] = errorElement.children[i].textContent;
-				}
-
-				// iv. Add error object to jsonErrorArray
-				jsonErrorArray.push(errorObject);
+			// ii. If it can't be parsed, it means its not XML, and is presumably a JSON string.  Parse to JSON object.
+			if (json == null) {
+				json = JSON.parse(xRequest.responseText);
 			}
 
-			// Important : The property names 'description', 'description2', 'correction', and 'errorno' are expected to be returned in the Intacct XML error response.
-			//			   If Intacct changes these names, you will need to modify this code.
-			desc1 = jsonErrorArray[0].description; desc2 = jsonErrorArray[0].description2; corr = jsonErrorArray[0].correction; errorNo = jsonErrorArray[0].errorno;
-		});
+			// iii. Inspect for possible error response // as alternative to try/catch verify if '(json.response.operation.result.status)' exists?
+			if (skipErrorChecking == false || skipErrorChecking == undefined) {
+				try {
+					if (!Array.isArray(json.response.operation.result)) {
+						if (json.response.operation.result.status == "failure") { return "Unknown error occurred contacting Intacct on function"; }
+					}
+				}
+				catch (e) {
+					// do nothing
+				}
+			}
 
-		// ==> Logger
-		if (this.logger != null) {
-
-			// NOTE: FOR INTACCT ERRORS, YOU ARE LOGGING AS A NORMAL ENTRY AND HANDLING FORMATTING HERE
-			this.logger.writeEntry("ERROR => Intacct API Errors Occurred (" + jsonErrorArray.length + " Total) :");
-			jsonErrorArray.forEach((element, index) => {
-				var errorCount = index + 1;
-				this.logger.writeEntry("-- Intacct Error #" + errorCount + " --");
-				this.logger.writeEntry("desc: " + element.description); this.logger.writeEntry("desc2: " + element.description2); this.logger.writeEntry("corr: " + element.correction); this.logger.writeEntry("errno: " + element.errorno);
-				this.logger.addError("desc: " + element.description + " | " + "desc2: " + element.description2 + " | " + "corr: " + element.correction + " | " + "errno: " + element.errorno);
-			});
+			// iii. Resolve json response
+			return {type: "success", message: json };
 		}
-
-		// var desc1 = util_getXmlNodeText(errNode, 'description');
-		// var desc2 = util_getXmlNodeText(errNode, 'description2');
-		// var corr = util_getXmlNodeText(errNode, 'correction');
-
-		if (!desc1 && !desc2 && !corr) {
-			message = errNode;
-		} else {
-			message = "";
-			if (multipleErrors) message = message + multipleErrors + "\n";
-			if (desc1) message = message + desc1 + "\n\n";
-			if (desc2) message = message + desc2 + "\n\n";
-			if (corr) message = message + corr + "\n\n";
-		}
-
-		var txt = document.createElement("textarea");
-		txt.innerHTML = message;
-
-		return txt.value.trim();
-	};
+	}
+};
 
 API_Internal_Session.prototype.getErrorMessage = function (responseText) {
 
